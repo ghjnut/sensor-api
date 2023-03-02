@@ -1,9 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"os"
 	// "context"
@@ -66,4 +66,13 @@ func ingestHandler(w http.ResponseWriter, req *http.Request) {
 func bad_payload_handler(w http.ResponseWriter, err error) {
 	log.Error(err.Error())
 	http.Error(w, err.Error(), http.StatusBadRequest)
+}
+
+func init_db() *sql.DB {
+	connStr := "user=pqgotest dbname=pqgotest sslmode=verify-full"
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return db
 }
