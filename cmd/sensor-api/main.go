@@ -31,6 +31,10 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
 
+type PayloadRaw struct {
+	data []string
+}
+
 // TODO probably move to a handler struct
 func ingestHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method != "POST" {
@@ -38,27 +42,27 @@ func ingestHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// TODO this could fail part-way through. we probably should separate parsing and saving
 	dec := json.NewDecoder(req.Body)
-	var sp sensor.Payload
-	err := dec.Decode(&sp)
-	// seems odd to put EOF in the class of "errors"
-	if err != io.EOF && err != nil {
-		bad_payload_handler(w, err)
-		return
-	}
-
-	log.Debug(sp.Data)
-
-	err = sp.Validate()
+	var pr PayloadRaw
+	err := dec.Decode(&pr)
 	if err != nil {
 		bad_payload_handler(w, err)
 		return
 	}
 
-	err = sp.Save()
-	if err != nil {
-		bad_payload_handler(w, err)
-		return
+	for i := 0; i < len(pr.data); i++ {
+		r, err := sensor.NewReading(pr.data[i])
+		if err != nil {
+			bad_payload_handler(w, err)
+			return
+		}
+
+		err = r.Save()
+		if err != nil {
+			bad_payload_handler(w, err)
+			return
+		}
 	}
 }
 
