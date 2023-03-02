@@ -12,11 +12,11 @@ RUN go mod download
 
 COPY . .
 
-RUN go build
+RUN go build -o sensor-api cmd/sensor-api/main.go
 
 FROM alpine:3.17
 
-COPY --from=builder /go/bin/* /usr/local/bin/
+COPY --from=builder /go/src/github.com/ghjnut/sensor-api /usr/local/bin/
 
 #VOLUME /etc/pingwave.hcl
 
