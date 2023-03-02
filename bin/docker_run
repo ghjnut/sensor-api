@@ -3,5 +3,5 @@
 sudo docker run --rm \
   -v $(pwd):/go/src/github.com/ghjnut/sensor-api \
   -w /go/src/github.com/ghjnut/sensor-api \
-  -p 8000 \
-    golang:1.20-alpine3.17
+  -p 8000:8000 \
+    ghjnut/sensor-api
