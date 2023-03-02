@@ -31,6 +31,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
 
+// TODO probably move to a handler struct
 func ingestHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method != "POST" {
 		bad_payload_handler(w, errors.New("bad request type 'POST'"))
@@ -38,7 +39,7 @@ func ingestHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	dec := json.NewDecoder(req.Body)
-	var sp sensor.SensorPayload
+	var sp sensor.Payload
 	err := dec.Decode(&sp)
 	// seems odd to put EOF in the class of "errors"
 	if err != io.EOF && err != nil {
