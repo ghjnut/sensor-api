@@ -1,15 +1,22 @@
 package main
 
 import (
-	//"os"
-	//"net/http"
+	"fmt"
+	"html"
+	"log"
+	"net/http"
+	// "context"
 )
 
 func init() {
-	log.SetOutput(os.Stdout)
-
-	log.SetLevel(log.InfoLevel)
 }
 
 func main() {
+	//http.Handle("/foo", fooHandler)
+
+	http.HandleFunc("/bar", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+	})
+
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
