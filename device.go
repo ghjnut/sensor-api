@@ -5,6 +5,7 @@ import "time"
 type Device struct {
 	DeviceID string
 	Logs     []Reading
+	// TODO look up functions as fields
 	//averageTemperature int
 	//mostRecentLogDate time.Time
 }
@@ -18,10 +19,11 @@ func (d *Device) AverageTemp() int {
 	return avg
 }
 
-// return nil if there are no logs
+// return Time.Zero if there are no logs (zero-value for time.Time)
 func (d *Device) MostRecentLogDate() (t time.Time) {
 	for _, log := range d.Logs {
-		if t == nil || log.LogDate.After(t) {
+		// work for first element since t is zeroed
+		if log.LogDate.After(t) {
 			t = log.LogDate
 		}
 	}
