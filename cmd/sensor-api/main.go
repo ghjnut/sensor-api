@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	// "context"
 
 	_ "github.com/lib/pq"
@@ -28,7 +29,7 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	db, err := init_db()
+	db, err := initDB()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -100,7 +101,7 @@ func (s *Service) deviceHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	device_id := strings.TrimPrefix(req.URL.Path, "/device/")
-	logs, err := getDeviceLogs(s.db, device_id)
+	_, err := getDeviceLogs(s.db, device_id)
 	// TODO correct response for not found, bad payload etc.
 	if err != nil {
 		badPayloadHandler(w, errors.New("bad request type"))
@@ -108,25 +109,28 @@ func (s *Service) deviceHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func getDeviceLogs(db *sql.DB, device_id string) ([]Reading, error) {
+func getDeviceLogs(db *sql.DB, device_id string) ([]sensor.Reading, error) {
 	rows, err := db.Query("SELECT event_date, temp_farenheit FROM logs WHERE device_id = ?", device_id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var logs []Reading
+	var logs []sensor.Reading
 
 	for rows.Next() {
-		var log Reading
+		var log sensor.Reading
 		if err := rows.Scan(&log.LogDate, &log.TempF); err != nil {
 			return logs, err
 		}
 		logs = append(logs, log)
 	}
+	// redundant, but explicit
 	if err = rows.Err(); err != nil {
 		return logs, err
 	}
+
+	return logs, err
 }
 
 func initDB() (*sql.DB, error) {
