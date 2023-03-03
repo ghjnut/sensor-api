@@ -115,7 +115,15 @@ func (s *Service) deviceHandler(w http.ResponseWriter, req *http.Request) {
 		ID:   device_id,
 		Logs: logs,
 	}
-	log.Debug(device.DeviceID)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(device)
+	if err != nil {
+		badPayloadHandler(w, err)
+		return
+	}
+	log.Debug(device.ID)
 }
 
 func writeLog(db *sql.DB, l *sensor.Log) error {
