@@ -12,11 +12,11 @@ type Device struct {
 
 func (d *Device) AverageTemperature() int {
 	// could lazy load and save value
-	avg := 0
+	total := 0
 	for _, l := range d.Logs {
-		avg += l.TempF
+		total += l.TempF
 	}
-	return avg
+	return total / len(d.Logs)
 }
 
 // return Time.Zero if there are no logs (zero-value for time.Time)
