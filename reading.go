@@ -3,6 +3,7 @@ package sensor
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -43,8 +44,16 @@ func NewReading(data string) (*Reading, error) {
 }
 
 // TODO also implementation specific, belongs elsewhere
-func (p *Reading) Save(*sql.DB) error {
-	//age := 21
-	//rows, err := db.Query("SELECT name FROM users WHERE age = $1", age)
+func (p *Reading) Save(db *sql.DB) error {
+	sqlStatement := `
+INSERT INTO logs (event_date, device_id, temp_farenheit)
+VALUES ($1, $2, $3)
+RETURNING event_id`
+	event_id := 0
+	err := db.QueryRow(sqlStatement, p.LogDate, p.DeviceID, p.TempF).Scan(&event_id)
+	if err != nil {
+		return err
+	}
+	fmt.Println("New record ID is:", event_id)
 	return nil
 }
