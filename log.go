@@ -42,18 +42,3 @@ func NewLog(data string) (*Log, error) {
 		TempF:    temp_f,
 	}, nil
 }
-
-// TODO also implementation specific, belongs elsewhere
-func (p *Log) Save(db *sql.DB) error {
-	sqlStatement := `
-INSERT INTO logs (event_date, device_id, temp_farenheit)
-VALUES ($1, $2, $3)
-RETURNING event_id`
-	event_id := 0
-	err := db.QueryRow(sqlStatement, p.Date, p.DeviceID, p.TempF).Scan(&event_id)
-	if err != nil {
-		return err
-	}
-	fmt.Println("New record ID is:", event_id)
-	return nil
-}

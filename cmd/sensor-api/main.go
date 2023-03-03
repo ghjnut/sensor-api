@@ -11,6 +11,7 @@ import (
 	// "context"
 
 	_ "github.com/lib/pq"
+	// a little dicey with the 'log' namespace collision
 	log "github.com/sirupsen/logrus"
 
 	"ghjnut/sensor"
@@ -80,13 +81,13 @@ func (s *Service) logHandler(w http.ResponseWriter, req *http.Request) {
 	// todo for _, data := range pr.Data
 	for i := 0; i < len(pr.Data); i++ {
 		log.Debug(pr.Data[i])
-		r, err := sensor.NewLog(pr.Data[i])
+		l, err := sensor.NewLog(pr.Data[i])
 		if err != nil {
 			badPayloadHandler(w, err)
 			return
 		}
 
-		err = r.Save(s.db)
+		err = writeLog(s.db, l)
 		if err != nil {
 			badPayloadHandler(w, err)
 			return
@@ -107,6 +108,20 @@ func (s *Service) deviceHandler(w http.ResponseWriter, req *http.Request) {
 		badPayloadHandler(w, errors.New("bad request type"))
 		return
 	}
+}
+
+func writeLog(db *sql.DB, l *sensor.Log) error {
+	// TODO will this raise errors correctly?
+	_, err := db.Exec("INSERT INTO logs (event_date, device_id, temp_farenheit) VALUES ($1, $2, $3)", l.Date, l.DeviceID, l.TempF)
+	return err
+
+	// returns event_id
+	//event_id, err := result.LastInsertId()
+	//if err != nil {
+	//    return err
+	//}
+	//// Return the new album's ID.
+	//return event_id, nil
 }
 
 func getDeviceLogs(db *sql.DB, device_id string) ([]sensor.Log, error) {

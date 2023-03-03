@@ -13,18 +13,18 @@ type Device struct {
 func (d *Device) AverageTemp() int {
 	// could lazy load and save value
 	avg := 0
-	for _, log := range d.Logs {
-		avg += log.TempF
+	for _, l := range d.Logs {
+		avg += l.TempF
 	}
 	return avg
 }
 
 // return Time.Zero if there are no logs (zero-value for time.Time)
 func (d *Device) MostRecentLogDate() (t time.Time) {
-	for _, log := range d.Logs {
+	for _, l := range d.Logs {
 		// work for first element since t is zeroed
-		if log.Date.After(t) {
-			t = log.Date
+		if l.Date.After(t) {
+			t = l.Date
 		}
 	}
 	return t
