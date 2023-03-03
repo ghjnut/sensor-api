@@ -80,7 +80,7 @@ func (s *Service) logHandler(w http.ResponseWriter, req *http.Request) {
 	// todo for _, data := range pr.Data
 	for i := 0; i < len(pr.Data); i++ {
 		log.Debug(pr.Data[i])
-		r, err := sensor.NewReading(pr.Data[i])
+		r, err := sensor.NewLog(pr.Data[i])
 		if err != nil {
 			badPayloadHandler(w, err)
 			return
@@ -109,18 +109,18 @@ func (s *Service) deviceHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func getDeviceLogs(db *sql.DB, device_id string) ([]sensor.Reading, error) {
+func getDeviceLogs(db *sql.DB, device_id string) ([]sensor.Log, error) {
 	rows, err := db.Query("SELECT event_date, temp_farenheit FROM logs WHERE device_id = ?", device_id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var logs []sensor.Reading
+	var logs []sensor.Log
 
 	for rows.Next() {
-		var log sensor.Reading
-		if err := rows.Scan(&log.LogDate, &log.TempF); err != nil {
+		var log sensor.Log
+		if err := rows.Scan(&log.Date, &log.TempF); err != nil {
 			return logs, err
 		}
 		logs = append(logs, log)

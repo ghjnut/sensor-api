@@ -9,14 +9,14 @@ import (
 	"time"
 )
 
-type Reading struct {
+type Log struct {
 	DeviceID string
-	LogDate  time.Time
+	Date     time.Time
 	TempF    int
 }
 
 // TODO this factory (data) is implementation specific, probably belongs somewhere else
-func NewReading(data string) (*Reading, error) {
+func NewLog(data string) (*Log, error) {
 	// TODO should validation be somewhere else?
 	fields := strings.Split(data, "|")
 	if len(fields) != 3 {
@@ -36,21 +36,21 @@ func NewReading(data string) (*Reading, error) {
 	}
 	temp_f := 2*temp_c + 30
 
-	return &Reading{
+	return &Log{
 		DeviceID: fields[0],
-		LogDate:  t,
+		Date:     t,
 		TempF:    temp_f,
 	}, nil
 }
 
 // TODO also implementation specific, belongs elsewhere
-func (p *Reading) Save(db *sql.DB) error {
+func (p *Log) Save(db *sql.DB) error {
 	sqlStatement := `
 INSERT INTO logs (event_date, device_id, temp_farenheit)
 VALUES ($1, $2, $3)
 RETURNING event_id`
 	event_id := 0
-	err := db.QueryRow(sqlStatement, p.LogDate, p.DeviceID, p.TempF).Scan(&event_id)
+	err := db.QueryRow(sqlStatement, p.Date, p.DeviceID, p.TempF).Scan(&event_id)
 	if err != nil {
 		return err
 	}
