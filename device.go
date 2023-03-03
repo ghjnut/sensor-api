@@ -4,10 +4,12 @@ import "time"
 
 type Device struct {
 	// TODO look up functions as fields
-	ID         string    `json:"deviceId"`
-	Logs       []Log     `json:"logs"`
+	ID   string `json:"deviceId"`
+	Logs []Log  `json:"logs"`
+	// inferred
 	AvgTemp    int       `json:"averageTemperature"`
 	MostRecent time.Time `json:"mostRecentLogDate"`
+	TotAlerts  int       `json:"totalAlerts"`
 }
 
 func (d *Device) AverageTemperature() int {
@@ -28,4 +30,13 @@ func (d *Device) MostRecentLogDate() (t time.Time) {
 		}
 	}
 	return t
+}
+
+func (d *Device) TotalAlerts() (cnt int) {
+	for _, l := range d.Logs {
+		if l.Alert {
+			cnt++
+		}
+	}
+	return cnt
 }

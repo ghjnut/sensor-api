@@ -117,6 +117,7 @@ func (s *Service) deviceHandler(w http.ResponseWriter, req *http.Request) {
 	// TODO this is hacky, better approach?
 	device.AvgTemp = device.AverageTemperature()
 	device.MostRecent = device.MostRecentLogDate()
+	device.TotAlerts = device.TotalAlerts()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -155,6 +156,7 @@ func getDeviceLogs(db *sql.DB, device_id string) ([]sensor.Log, error) {
 		if err := rows.Scan(&l.Date, &l.TempF); err != nil {
 			return logs, err
 		}
+		l.Alert = l.Alerted()
 		logs = append(logs, l)
 	}
 	// redundant, but explicit
