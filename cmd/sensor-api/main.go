@@ -55,6 +55,8 @@ func (s *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	case "/ingest":
 		s.logHandler(w, r)
+	case "/device/":
+		s.deviceHandler(w, r)
 	}
 }
 
@@ -65,6 +67,7 @@ func (s *Service) logHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	dec := json.NewDecoder(req.Body)
+	// TODO better way to make this less of a formal struct
 	var pr PayloadRaw
 	err := dec.Decode(&pr)
 	if err != nil {
@@ -73,6 +76,7 @@ func (s *Service) logHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// TODO this could fail part-way through. we probably should separate parsing and saving
+	// todo for _, data := range pr.Data
 	for i := 0; i < len(pr.Data); i++ {
 		log.Debug(pr.Data[i])
 		r, err := sensor.NewReading(pr.Data[i])
@@ -89,10 +93,40 @@ func (s *Service) logHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// what to return if bad decode? should surface, as we would _never_ expect to receive bad payloads
-func bad_payload_handler(w http.ResponseWriter, err error) {
-	log.Error(err.Error())
-	http.Error(w, err.Error(), http.StatusBadRequest)
+func (s *Service) deviceHandler(w http.ResponseWriter, req *http.Request) {
+	if req.Method != "GET" {
+		badPayloadHandler(w, errors.New("bad request type"))
+		return
+	}
+
+	device_id := strings.TrimPrefix(req.URL.Path, "/device/")
+	logs, err := getDeviceLogs(s.db, device_id)
+	// TODO correct response for not found, bad payload etc.
+	if err != nil {
+		badPayloadHandler(w, errors.New("bad request type"))
+		return
+	}
+}
+
+func getDeviceLogs(db *sql.DB, device_id string) ([]Reading, error) {
+	rows, err := db.Query("SELECT event_date, temp_farenheit FROM logs WHERE device_id = ?", device_id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var logs []Reading
+
+	for rows.Next() {
+		var log Reading
+		if err := rows.Scan(&log.LogDate, &log.TempF); err != nil {
+			return logs, err
+		}
+		logs = append(logs, log)
+	}
+	if err = rows.Err(); err != nil {
+		return logs, err
+	}
 }
 
 func initDB() (*sql.DB, error) {
