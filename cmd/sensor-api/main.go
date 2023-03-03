@@ -8,6 +8,7 @@ import (
 	"os"
 	// "context"
 
+	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 
 	"ghjnut/sensor"
@@ -26,17 +27,37 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	http.HandleFunc("/ingest", ingestHandler)
+	db, err := init_db()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	s := &Service{db: db}
+
+	//http.HandleFunc("/ingest", ingestHandler)
+
+	log.Fatal(http.ListenAndServe(":8000", s))
 }
 
 type PayloadRaw struct {
 	data []string
 }
 
-// TODO probably move to a handler struct
-func ingestHandler(w http.ResponseWriter, req *http.Request) {
+type Service struct {
+	db *sql.DB
+}
+
+func (s *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	switch r.URL.Path {
+	default:
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	case "/ingest":
+		s.readingHandler(w, r)
+	}
+}
+
+func (s *Service) readingHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method != "POST" {
 		bad_payload_handler(w, errors.New("bad request type 'POST'"))
 		return
@@ -51,6 +72,8 @@ func ingestHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	log.Debug(pr.data)
+
 	for i := 0; i < len(pr.data); i++ {
 		r, err := sensor.NewReading(pr.data[i])
 		if err != nil {
@@ -58,7 +81,7 @@ func ingestHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		err = r.Save()
+		err = r.Save(s.db)
 		if err != nil {
 			bad_payload_handler(w, err)
 			return
@@ -72,11 +95,8 @@ func bad_payload_handler(w http.ResponseWriter, err error) {
 	http.Error(w, err.Error(), http.StatusBadRequest)
 }
 
-func init_db() *sql.DB {
-	connStr := "user=pqgotest dbname=pqgotest sslmode=verify-full"
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return db
+func init_db() (*sql.DB, error) {
+	// TODO make env-vars
+	connStr := "host=database user=pguser password=pgpassword dbname=code_challenge"
+	return sql.Open("postgres", connStr)
 }

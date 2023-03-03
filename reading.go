@@ -1,7 +1,7 @@
 package sensor
 
 import (
-	//"database/sql"
+	"database/sql"
 	"errors"
 	"strconv"
 	"strings"
@@ -42,9 +42,8 @@ func NewReading(data string) (*Reading, error) {
 	}, nil
 }
 
-// TODO implement
-// TODO also implementation specific, probably belongs somewhere else
-func (p *Reading) Save() error {
+// TODO also implementation specific, belongs elsewhere
+func (p *Reading) Save(*sql.DB) error {
 	//age := 21
 	//rows, err := db.Query("SELECT name FROM users WHERE age = $1", age)
 	return nil
