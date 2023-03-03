@@ -54,13 +54,13 @@ func (s *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	case "/ingest":
-		s.readingHandler(w, r)
+		s.logHandler(w, r)
 	}
 }
 
-func (s *Service) readingHandler(w http.ResponseWriter, req *http.Request) {
+func (s *Service) logHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method != "POST" {
-		bad_payload_handler(w, errors.New("bad request type 'POST'"))
+		badPayloadHandler(w, errors.New("bad request type"))
 		return
 	}
 
@@ -68,7 +68,7 @@ func (s *Service) readingHandler(w http.ResponseWriter, req *http.Request) {
 	var pr PayloadRaw
 	err := dec.Decode(&pr)
 	if err != nil {
-		bad_payload_handler(w, err)
+		badPayloadHandler(w, err)
 		return
 	}
 
@@ -77,13 +77,13 @@ func (s *Service) readingHandler(w http.ResponseWriter, req *http.Request) {
 		log.Debug(pr.Data[i])
 		r, err := sensor.NewReading(pr.Data[i])
 		if err != nil {
-			bad_payload_handler(w, err)
+			badPayloadHandler(w, err)
 			return
 		}
 
 		err = r.Save(s.db)
 		if err != nil {
-			bad_payload_handler(w, err)
+			badPayloadHandler(w, err)
 			return
 		}
 	}
@@ -95,10 +95,16 @@ func bad_payload_handler(w http.ResponseWriter, err error) {
 	http.Error(w, err.Error(), http.StatusBadRequest)
 }
 
-func init_db() (*sql.DB, error) {
+func initDB() (*sql.DB, error) {
 	host, user, password, dbname := "database", "pguser", "pgpassword", "code_challenge"
 
 	psqlInfo := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", host, user, password, dbname)
 
 	return sql.Open("postgres", psqlInfo)
+}
+
+// what to return if bad decode? should surface, as we would _never_ expect to receive bad payloads
+func badPayloadHandler(w http.ResponseWriter, err error) {
+	log.Error(err.Error())
+	http.Error(w, err.Error(), http.StatusBadRequest)
 }
