@@ -3,8 +3,9 @@ package sensor
 import "time"
 
 type Device struct {
-	DeviceID string
-	Logs     []Log
+	// TODO redundant
+	ID   string
+	Logs []Log
 	// TODO look up functions as fields
 	//averageTemperature int
 	//mostRecentLogDate time.Time

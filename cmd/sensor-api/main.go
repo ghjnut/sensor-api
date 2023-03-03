@@ -112,8 +112,8 @@ func (s *Service) deviceHandler(w http.ResponseWriter, req *http.Request) {
 
 	// TODO ideally just Marshal directly to Device
 	device := &sensor.Device{
-		DeviceID: device_id,
-		Logs:     logs,
+		ID:   device_id,
+		Logs: logs,
 	}
 	log.Debug(device.DeviceID)
 }
@@ -128,7 +128,6 @@ func writeLog(db *sql.DB, l *sensor.Log) error {
 	//if err != nil {
 	//    return err
 	//}
-	//// Return the new album's ID.
 	//return event_id, nil
 }
 

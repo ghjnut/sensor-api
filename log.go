@@ -15,7 +15,6 @@ type Log struct {
 
 // TODO this factory (data string) is implementation specific, probably belongs somewhere else
 func NewLog(data string) (*Log, error) {
-	// TODO should validation be somewhere else?
 	fields := strings.Split(data, "|")
 	if len(fields) != 3 {
 		return nil, errors.New("bad payload")
