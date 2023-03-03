@@ -1,9 +1,7 @@
 package sensor
 
 import (
-	"database/sql"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -15,7 +13,7 @@ type Log struct {
 	TempF    int
 }
 
-// TODO this factory (data) is implementation specific, probably belongs somewhere else
+// TODO this factory (data string) is implementation specific, probably belongs somewhere else
 func NewLog(data string) (*Log, error) {
 	// TODO should validation be somewhere else?
 	fields := strings.Split(data, "|")

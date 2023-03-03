@@ -51,13 +51,13 @@ type Service struct {
 }
 
 func (s *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.URL.Path {
+	switch {
 	default:
 		http.Error(w, "not found", http.StatusNotFound)
 		return
-	case "/ingest":
+	case r.URL.Path == "/ingest":
 		s.logHandler(w, r)
-	case "/device/":
+	case strings.HasPrefix(r.URL.Path, "/device/"):
 		s.deviceHandler(w, r)
 	}
 }
@@ -68,6 +68,7 @@ func (s *Service) logHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// TODO not sure how to Unmarshal/Decode directly to a struct when we need transform functions
 	dec := json.NewDecoder(req.Body)
 	// TODO better way to make this less of a formal struct
 	var pr PayloadRaw
@@ -78,7 +79,7 @@ func (s *Service) logHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// TODO this could fail part-way through. we probably should separate parsing and saving
-	// todo for _, data := range pr.Data
+	// TODO for _, data := range pr.Data
 	for i := 0; i < len(pr.Data); i++ {
 		log.Debug(pr.Data[i])
 		l, err := sensor.NewLog(pr.Data[i])
@@ -102,12 +103,19 @@ func (s *Service) deviceHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	device_id := strings.TrimPrefix(req.URL.Path, "/device/")
-	_, err := getDeviceLogs(s.db, device_id)
+	logs, err := getDeviceLogs(s.db, device_id)
 	// TODO correct response for not found, bad payload etc.
 	if err != nil {
 		badPayloadHandler(w, errors.New("bad request type"))
 		return
 	}
+
+	// TODO ideally just Marshal directly to Device
+	device := &sensor.Device{
+		DeviceID: device_id,
+		Logs:     logs,
+	}
+	log.Debug(device.DeviceID)
 }
 
 func writeLog(db *sql.DB, l *sensor.Log) error {
