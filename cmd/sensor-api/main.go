@@ -142,11 +142,11 @@ func getDeviceLogs(db *sql.DB, device_id string) ([]sensor.Log, error) {
 	var logs []sensor.Log
 
 	for rows.Next() {
-		var log sensor.Log
-		if err := rows.Scan(&log.Date, &log.TempF); err != nil {
+		var l sensor.Log
+		if err := rows.Scan(&l.Date, &l.TempF); err != nil {
 			return logs, err
 		}
-		logs = append(logs, log)
+		logs = append(logs, l)
 	}
 	// redundant, but explicit
 	if err = rows.Err(); err != nil {
