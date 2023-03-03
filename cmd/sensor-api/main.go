@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	// "context"
@@ -31,10 +32,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 
 	s := &Service{db: db}
-
-	//http.HandleFunc("/ingest", ingestHandler)
 
 	log.Fatal(http.ListenAndServe(":8000", s))
 }
@@ -63,7 +63,6 @@ func (s *Service) readingHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// TODO this could fail part-way through. we probably should separate parsing and saving
 	dec := json.NewDecoder(req.Body)
 	var pr PayloadRaw
 	err := dec.Decode(&pr)
@@ -72,10 +71,10 @@ func (s *Service) readingHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Debug(pr.data)
-
-	for i := 0; i < len(pr.data); i++ {
-		r, err := sensor.NewReading(pr.data[i])
+	// TODO this could fail part-way through. we probably should separate parsing and saving
+	for i := 0; i < len(pr.Data); i++ {
+		log.Debug(pr.Data[i])
+		r, err := sensor.NewReading(pr.Data[i])
 		if err != nil {
 			bad_payload_handler(w, err)
 			return
@@ -96,7 +95,9 @@ func bad_payload_handler(w http.ResponseWriter, err error) {
 }
 
 func init_db() (*sql.DB, error) {
-	// TODO make env-vars
-	connStr := "host=database user=pguser password=pgpassword dbname=code_challenge"
-	return sql.Open("postgres", connStr)
+	host, user, password, dbname := "database", "pguser", "pgpassword", "code_challenge"
+
+	psqlInfo := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", host, user, password, dbname)
+
+	return sql.Open("postgres", psqlInfo)
 }
