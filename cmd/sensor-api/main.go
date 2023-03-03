@@ -37,10 +37,11 @@ func main() {
 	s := &Service{db: db}
 
 	log.Fatal(http.ListenAndServe(":8000", s))
+
 }
 
 type PayloadRaw struct {
-	data []string
+	Data []string
 }
 
 type Service struct {
