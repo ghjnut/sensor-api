@@ -8,9 +8,9 @@ import (
 )
 
 type Log struct {
-	DeviceID string
-	Date     time.Time
-	TempF    int
+	DeviceID string    `json:"deviceId,omitempty"`
+	Date     time.Time `json:"logDate"`
+	TempF    int       `json:"temperature"`
 }
 
 // TODO this factory (data string) is implementation specific, probably belongs somewhere else

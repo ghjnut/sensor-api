@@ -3,15 +3,14 @@ package sensor
 import "time"
 
 type Device struct {
-	// TODO redundant
-	ID   string
-	Logs []Log
 	// TODO look up functions as fields
-	//averageTemperature int
-	//mostRecentLogDate time.Time
+	ID         string    `json:"deviceId"`
+	Logs       []Log     `json:"logs"`
+	AvgTemp    int       `json:"averageTemperature"`
+	MostRecent time.Time `json:"mostRecentLogDate"`
 }
 
-func (d *Device) AverageTemp() int {
+func (d *Device) AverageTemperature() int {
 	// could lazy load and save value
 	avg := 0
 	for _, l := range d.Logs {

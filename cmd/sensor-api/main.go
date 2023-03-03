@@ -110,11 +110,13 @@ func (s *Service) deviceHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// TODO ideally just Marshal directly to Device
 	device := &sensor.Device{
 		ID:   device_id,
 		Logs: logs,
 	}
+	// TODO this is hacky, better approach?
+	device.AvgTemp = device.AverageTemperature()
+	device.MostRecent = device.MostRecentLogDate()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
