@@ -8,10 +8,10 @@ import (
 )
 
 type Log struct {
-	DeviceID string    `json:"deviceId,omitempty"`
-	Date     time.Time `json:"logDate"`
+	DeviceID     string    `json:"deviceId,omitempty"`
+	Date         time.Time `json:"logDate"`
+	TemperatureF int       `json:"temperature"`
 	// inferred
-	TempF int  `json:"temperature"`
 	Alert bool `json:"alert"`
 }
 
@@ -35,23 +35,19 @@ func NewLog(data string) (*Log, error) {
 	}
 	temp_f := 2*temp_c + 30
 
-	alert := false
-	if temp_f > 32 {
-		alert = true
+	l := &Log{
+		DeviceID:     fields[0],
+		Date:         t,
+		TemperatureF: temp_f,
 	}
+	_ = l.SetAlert()
 
-	return &Log{
-		DeviceID: fields[0],
-		Date:     t,
-		TempF:    temp_f,
-		Alert:    alert,
-	}, nil
+	return l, nil
 }
 
-func (d *Log) Alerted() bool {
-	alert := false
-	if d.TempF > 32 {
-		alert = true
+func (d *Log) SetAlert() bool {
+	if d.TemperatureF > 32 {
+		d.Alert = true
 	}
-	return alert
+	return d.Alert
 }

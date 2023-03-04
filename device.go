@@ -7,36 +7,39 @@ type Device struct {
 	ID   string `json:"deviceId"`
 	Logs []Log  `json:"logs"`
 	// inferred
-	AvgTemp    int       `json:"averageTemperature"`
-	MostRecent time.Time `json:"mostRecentLogDate"`
-	TotAlerts  int       `json:"totalAlerts"`
+	AverageTemperature int       `json:"averageTemperature"`
+	MostRecentLogDate  time.Time `json:"mostRecentLogDate"`
+	TotalAlerts        int       `json:"totalAlerts"`
 }
 
-func (d *Device) AverageTemperature() int {
+func (d *Device) SetAverageTemperature() int {
 	// could lazy load and save value
 	total := 0
 	for _, l := range d.Logs {
-		total += l.TempF
+		total += l.TemperatureF
 	}
-	return total / len(d.Logs)
+	d.AverageTemperatue = total / len(d.Logs)
+	return d.AverageTemperature
 }
 
 // return Time.Zero if there are no logs (zero-value for time.Time)
-func (d *Device) MostRecentLogDate() (t time.Time) {
+func (d *Device) SetMostRecentLogDate() (t time.Time) {
 	for _, l := range d.Logs {
 		// work for first element since t is zeroed
 		if l.Date.After(t) {
 			t = l.Date
 		}
 	}
-	return t
+	d.MostRecentLogDate = t
+	return d.MostRecentLogDate
 }
 
-func (d *Device) TotalAlerts() (cnt int) {
+func (d *Device) SetTotalAlerts() (cnt int) {
 	for _, l := range d.Logs {
 		if l.Alert {
 			cnt++
 		}
 	}
-	return cnt
+	d.TotalAlerts = cnt
+	return d.TotalAlerts
 }

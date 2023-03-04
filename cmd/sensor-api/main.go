@@ -115,9 +115,9 @@ func (s *Service) deviceHandler(w http.ResponseWriter, req *http.Request) {
 		Logs: logs,
 	}
 	// TODO this is hacky, better approach?
-	device.AvgTemp = device.AverageTemperature()
-	device.MostRecent = device.MostRecentLogDate()
-	device.TotAlerts = device.TotalAlerts()
+	_ = device.SetAverageTemperature()
+	_ = device.SetMostRecentLogDate()
+	_ = device.SetTotalAlerts()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -131,7 +131,7 @@ func (s *Service) deviceHandler(w http.ResponseWriter, req *http.Request) {
 
 func writeLog(db *sql.DB, l *sensor.Log) error {
 	// TODO will this raise errors correctly?
-	_, err := db.Exec("INSERT INTO logs (event_date, device_id, temp_farenheit) VALUES ($1, $2, $3)", l.Date, l.DeviceID, l.TempF)
+	_, err := db.Exec("INSERT INTO logs (event_date, device_id, temp_farenheit) VALUES ($1, $2, $3)", l.Date, l.DeviceID, l.TemperatureF)
 	return err
 
 	// returns event_id
@@ -153,10 +153,10 @@ func getDeviceLogs(db *sql.DB, device_id string) ([]sensor.Log, error) {
 
 	for rows.Next() {
 		var l sensor.Log
-		if err := rows.Scan(&l.Date, &l.TempF); err != nil {
+		if err := rows.Scan(&l.Date, &l.TemperatureF); err != nil {
 			return logs, err
 		}
-		l.Alert = l.Alerted()
+		_ = l.SetAlert()
 		logs = append(logs, l)
 	}
 	// redundant, but explicit
