@@ -143,7 +143,7 @@ func writeLog(db *sql.DB, l *sensor.Log) error {
 }
 
 func getDeviceLogs(db *sql.DB, device_id string) ([]sensor.Log, error) {
-	rows, err := db.Query("SELECT event_date, temp_farenheit FROM logs WHERE device_id = $1", device_id)
+	rows, err := db.Query("SELECT event_date, device_id, temp_farenheit FROM logs WHERE device_id = $1", device_id)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func getDeviceLogs(db *sql.DB, device_id string) ([]sensor.Log, error) {
 
 	for rows.Next() {
 		var l sensor.Log
-		if err := rows.Scan(&l.Date, &l.TemperatureF); err != nil {
+		if err := rows.Scan(&l.Date, &l.DeviceID, &l.TemperatureF); err != nil {
 			return logs, err
 		}
 		_ = l.SetAlert()

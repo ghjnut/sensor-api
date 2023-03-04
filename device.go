@@ -18,7 +18,7 @@ func (d *Device) SetAverageTemperature() int {
 	for _, l := range d.Logs {
 		total += l.TemperatureF
 	}
-	d.AverageTemperatue = total / len(d.Logs)
+	d.AverageTemperature = total / len(d.Logs)
 	return d.AverageTemperature
 }
 
