@@ -31,7 +31,7 @@ type CreateLogsOut struct {
 }
 
 type LogOut struct {
-	DeviceID     string    `json:"deviceId,omitempty"`
+	DeviceID     string    `json:"-"`
 	Date         time.Time `json:"logDate"`
 	TemperatureF int       `json:"temperature"`
 	// inferred
