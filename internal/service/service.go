@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"ghjnut/sensor"
 	"ghjnut/sensor/internal"
 )
 
@@ -58,7 +57,7 @@ func (s *service) CreateLogs(ctx context.Context, in internal.CreateLogsIn) (out
 	return out, err
 }
 
-func (s *service) Logs(ctx context.Context, in internal.LogsIn) (logs []sensor.Log, err error) {
+func (s *service) Logs(ctx context.Context, in internal.LogsIn) (logs []internal.LogOut, err error) {
 	rows, err := s.db.Query("SELECT event_date, device_id, temp_farenheit FROM logs WHERE device_id = $1", in.DeviceID)
 	if err != nil {
 		return nil, err
@@ -66,9 +65,12 @@ func (s *service) Logs(ctx context.Context, in internal.LogsIn) (logs []sensor.L
 	defer rows.Close()
 
 	for rows.Next() {
-		var l sensor.Log
+		var l internal.LogOut
 		if err := rows.Scan(&l.Date, &l.DeviceID, &l.TemperatureF); err != nil {
 			return logs, err
+		}
+		if l.TemperatureF > 32 {
+			l.Alert = true
 		}
 		logs = append(logs, l)
 	}
@@ -80,15 +82,35 @@ func (s *service) Logs(ctx context.Context, in internal.LogsIn) (logs []sensor.L
 	return logs, err
 }
 
-func (s *service) Device(ctx context.Context, in internal.DeviceIn) (dev sensor.Device, err error) {
+func (s *service) Device(ctx context.Context, in internal.DeviceIn) (dev internal.DeviceOut, err error) {
 	dev.ID = in.ID
 
-	var li internal.LogsIn
-	li.DeviceID = in.ID
-	logs, err := s.Logs(ctx, li)
+	var lin internal.LogsIn
+	lin.DeviceID = in.ID
+	logs, err := s.Logs(ctx, lin)
 	if err != nil {
 		return dev, err
 	}
 	dev.Logs = logs
+
+	total_temp := 0
+	latest_date := time.Time{}
+	alert_cnt := 0
+	for _, l := range dev.Logs {
+		total_temp += l.TemperatureF
+
+		// work for first element since t is zeroed
+		if l.Date.After(latest_date) {
+			latest_date = l.Date
+		}
+
+		if l.Alert {
+			alert_cnt++
+		}
+	}
+	dev.AverageTemperature = total_temp / len(dev.Logs)
+	dev.MostRecentLogDate = latest_date
+	dev.TotalAlerts = alert_cnt
+
 	return dev, err
 }
