@@ -15,6 +15,8 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"ghjnut/sensor"
+	"ghjnut/sensor/internal/httptransport"
+	"ghjnut/sensor/internal/service"
 )
 
 func init() {
@@ -36,10 +38,12 @@ func main() {
 	}
 	defer db.Close()
 
-	s := &Service{db: db}
+	// TODO signal handeling goes here
 
-	log.Fatal(http.ListenAndServe(":8000", s))
-
+	s := service.New(db)
+	h := httptransport.Handler(s)
+	err = http.ListenAndServe(":8000", h)
+	log.Fatalln(err)
 }
 
 type PayloadRaw struct {
