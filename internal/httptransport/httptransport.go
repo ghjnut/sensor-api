@@ -3,6 +3,7 @@ package httptransport
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"ghjnut/sensor/internal"
 )
@@ -21,7 +22,7 @@ func Handler(s internal.Service) http.Handler {
 	//	s.deviceHandler(w, r)
 
 	r.HandleFunc("/ingest", h.createLogs)
-	//r.HandleFunc("/device/", h.devices)
+	r.HandleFunc("/device/", h.device)
 	return r
 }
 
@@ -57,5 +58,34 @@ func (h *handler) createLogs(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
+	w.Write(b)
+}
+
+func (h *handler) device(w http.ResponseWriter, req *http.Request) {
+	if req.Method != "GET" {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	device_id := strings.TrimPrefix(req.URL.Path, "/device/")
+	var in internal.DeviceIn
+	in.ID = device_id
+
+	ctx := req.Context()
+
+	out, err := h.Device(ctx, in)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	b, err := json.Marshal(out)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
 	w.Write(b)
 }

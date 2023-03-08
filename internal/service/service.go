@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"ghjnut/sensor"
 	"ghjnut/sensor/internal"
 )
 
@@ -57,4 +58,39 @@ func (s *service) CreateLogs(ctx context.Context, in internal.CreateLogsIn) (out
 		}
 	}
 	return out, err
+}
+
+func (s *service) Logs(ctx context.Context, in internal.LogsIn) (logs []sensor.Log, err error) {
+	rows, err := s.db.Query("SELECT event_date, device_id, temp_farenheit FROM logs WHERE device_id = $1", in.DeviceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var l sensor.Log
+		if err := rows.Scan(&l.Date, &l.DeviceID, &l.TemperatureF); err != nil {
+			return logs, err
+		}
+		logs = append(logs, l)
+	}
+	// redundant, but explicit
+	if err = rows.Err(); err != nil {
+		return logs, err
+	}
+
+	return logs, err
+}
+
+func (s *service) Device(ctx context.Context, in internal.DeviceIn) (dev sensor.Device, err error) {
+	dev.ID = in.ID
+
+	var li internal.LogsIn
+	li.DeviceID = in.ID
+	logs, err := s.Logs(ctx, li)
+	if err != nil {
+		return dev, err
+	}
+	dev.Logs = logs
+	return dev, err
 }
