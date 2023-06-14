@@ -1,0 +1,19 @@
+---
+version: '3.7'
+services:
+  sensor-api:
+    image: ghjnut/sensor-api
+    links:
+      - "database"
+    ports:
+      - "8000:8000"
+
+  database:
+    image: postgres
+    env_file: .env
+    volumes:
+      - ./database/create_table.sql:/docker-entrypoint-initdb.d/create_table.sql
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"
